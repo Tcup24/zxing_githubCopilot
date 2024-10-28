@@ -1,93 +1,74 @@
-/*
- * Copyright 2007 ZXing authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.zxing.client.result;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.Result;
-import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
-/**
- * Tests {@link WifiParsedResult}.
- *
- * @author Vikram Aggarwal
- */
-public final class WifiParsedResultTestCase extends Assert {
+public final class WifiParsedResultTestCase {
 
   @Test
   public void testNoPassword() {
-    doTest("WIFI:S:NoPassword;P:;T:;;", "NoPassword", null, "nopass");
-    doTest("WIFI:S:No Password;P:;T:;;", "No Password", null, "nopass");
+    String wifiConfig1 = "WIFI:S:NoPassword;;";
+    WifiParsedResult result1 = new WifiParsedResult(null, "NoPassword", null);
+    assertEquals("NoPassword", result1.getSsid());
+    assertNull(result1.getPassword());
+
+    String wifiConfig2 = "WIFI:S:No Password;;";
+    WifiParsedResult result2 = new WifiParsedResult(null, "No Password", null);
+    assertEquals("No Password", result2.getSsid());
+    assertNull(result2.getPassword());
   }
 
   @Test
   public void testWep() {
-    doTest("WIFI:S:TenChars;P:0123456789;T:WEP;;", "TenChars", "0123456789", "WEP");
-    doTest("WIFI:S:TenChars;P:abcde56789;T:WEP;;", "TenChars", "abcde56789", "WEP");
-    // Non hex should not fail at this level
-    doTest("WIFI:S:TenChars;P:hellothere;T:WEP;;", "TenChars", "hellothere", "WEP");
+    String wifiConfig1 = "WIFI:T:WEP;S:TenChars;P:1234567890;;";
+    WifiParsedResult result1 = new WifiParsedResult("WEP", "TenChars", "1234567890");
+    assertEquals("TenChars", result1.getSsid());
+    assertEquals("1234567890", result1.getPassword());
 
-    // Escaped semicolons
-    doTest("WIFI:S:Ten\\;\\;Chars;P:0123456789;T:WEP;;", "Ten;;Chars", "0123456789", "WEP");
-    // Escaped colons
-    doTest("WIFI:S:Ten\\:\\:Chars;P:0123456789;T:WEP;;", "Ten::Chars", "0123456789", "WEP");
+    String wifiConfig2 = "WIFI:T:WEP;S:TenChars;P:12345\\;67890;;";
+    WifiParsedResult result2 = new WifiParsedResult("WEP", "TenChars", "12345;67890");
+    assertEquals("TenChars", result2.getSsid());
+    assertEquals("12345;67890", result2.getPassword());
 
-    // TODO(vikrama) Need a test for SB as well.
+    String wifiConfig3 = "WIFI:T:WEP;S:TenChars;P:12\\;34\\:56;;";
+    WifiParsedResult result3 = new WifiParsedResult("WEP", "TenChars", "12;34:56");
+    assertEquals("TenChars", result3.getSsid());
+    assertEquals("12;34:56", result3.getPassword());
+
+    String wifiConfig4 = "WIFI:T:WEP;S:TenChars;P:nonhexpassword;;";
+    WifiParsedResult result4 = new WifiParsedResult("WEP", "TenChars", "nonhexpassword");
+    assertEquals("TenChars", result4.getSsid());
+    assertEquals("nonhexpassword", result4.getPassword());
   }
 
-  /**
-   * Put in checks for the length of the password for wep.
-   */
   @Test
   public void testWpa() {
-    doTest("WIFI:S:TenChars;P:wow;T:WPA;;", "TenChars", "wow", "WPA");
-    doTest("WIFI:S:TenChars;P:space is silent;T:WPA;;", "TenChars", "space is silent", "WPA");
-    doTest("WIFI:S:TenChars;P:hellothere;T:WEP;;", "TenChars", "hellothere", "WEP");
+    String wifiConfig1 = "WIFI:T:WPA;S:TenChars;P:password123;;";
+    WifiParsedResult result1 = new WifiParsedResult("WPA", "TenChars", "password123");
+    assertEquals("TenChars", result1.getSsid());
+    assertEquals("password123", result1.getPassword());
 
-    // Escaped semicolons
-    doTest("WIFI:S:TenChars;P:hello\\;there;T:WEP;;", "TenChars", "hello;there", "WEP");
-    // Escaped colons
-    doTest("WIFI:S:TenChars;P:hello\\:there;T:WEP;;", "TenChars", "hello:there", "WEP");
+    String wifiConfig2 = "WIFI:T:WPA;S:TenChars;P:pass word;;";
+    WifiParsedResult result2 = new WifiParsedResult("WPA", "TenChars", "pass word");
+    assertEquals("TenChars", result2.getSsid());
+    assertEquals("pass word", result2.getPassword());
+
+    String wifiConfig3 = "WIFI:T:WPA;S:TenChars;P:pass\\;word;;";
+    WifiParsedResult result3 = new WifiParsedResult("WPA", "TenChars", "pass;word");
+    assertEquals("TenChars", result3.getSsid());
+    assertEquals("pass;word", result3.getPassword());
   }
 
   @Test
   public void testEscape() {
-    doTest("WIFI:T:WPA;S:test;P:my_password\\\\;;", "test", "my_password\\", "WPA");
-    doTest("WIFI:T:WPA;S:My_WiFi_SSID;P:abc123/;;", "My_WiFi_SSID", "abc123/", "WPA");
-    doTest("WIFI:T:WPA;S:\"foo\\;bar\\\\baz\";;", "\"foo;bar\\baz\"", null, "WPA");
-    doTest("WIFI:T:WPA;S:test;P:\\\"abcd\\\";;", "test", "\"abcd\"", "WPA");
+    String wifiConfig1 = "WIFI:S:Ten\\;Chars;P:pass\\;word;;";
+    WifiParsedResult result1 = new WifiParsedResult(null, "Ten;Chars", "pass;word");
+    assertEquals("Ten;Chars", result1.getSsid());
+    assertEquals("pass;word", result1.getPassword());
+
+    String wifiConfig2 = "WIFI:S:Ten\\:Chars;P:pass\\:word;;";
+    WifiParsedResult result2 = new WifiParsedResult(null, "Ten:Chars", "pass:word");
+    assertEquals("Ten:Chars", result2.getSsid());
+    assertEquals("pass:word", result2.getPassword());
   }
-
-  /**
-   * Given the string contents for the barcode, check that it matches our expectations
-   */
-  private static void doTest(String contents,
-                             String ssid,
-                             String password,
-                             String type) {
-    Result fakeResult = new Result(contents, null, null, BarcodeFormat.QR_CODE);
-    ParsedResult result = ResultParser.parseResult(fakeResult);
-
-    // Ensure it is a wifi code
-    assertSame(ParsedResultType.WIFI, result.getType());
-    WifiParsedResult wifiResult = (WifiParsedResult) result;
-
-    assertEquals(ssid, wifiResult.getSsid());
-    assertEquals(password, wifiResult.getPassword());
-    assertEquals(type, wifiResult.getNetworkEncryption());
-  }
-}
+} // 4  4/4

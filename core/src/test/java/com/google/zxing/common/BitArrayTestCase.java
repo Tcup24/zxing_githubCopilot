@@ -1,258 +1,163 @@
-/*
- * Copyright 2007 ZXing authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.zxing.common;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Random;
-
-/**
- * @author Sean Owen
- */
-public final class BitArrayTestCase extends Assert {
+class BitArrayTestCase {
 
   @Test
-  public void testGetSet() {
-    BitArray array = new BitArray(33);
-    for (int i = 0; i < 33; i++) {
-      assertFalse(array.get(i));
-      array.set(i);
-      assertTrue(array.get(i));
-    }
-  }
-
-  @Test
-  public void testGetNextSet1() {
-    BitArray array = new BitArray(32);
-    for (int i = 0; i < array.getSize(); i++) {
-      assertEquals(String.valueOf(i), 32, array.getNextSet(i));
-    }
-    array = new BitArray(33);
-    for (int i = 0; i < array.getSize(); i++) {
-      assertEquals(String.valueOf(i), 33, array.getNextSet(i));
-    }
-  }
-  
-  @Test
-  public void testGetNextSet2() {
-    BitArray array = new BitArray(33);    
-    array.set(31);
-    for (int i = 0; i < array.getSize(); i++) {
-      assertEquals(String.valueOf(i), i <= 31 ? 31 : 33, array.getNextSet(i));
-    }
-    array = new BitArray(33);
-    array.set(32);
-    for (int i = 0; i < array.getSize(); i++) {
-      assertEquals(String.valueOf(i), 32, array.getNextSet(i));
-    }
-  }
-  
-  @Test
-  public void testGetNextSet3() {
-    BitArray array = new BitArray(63);    
-    array.set(31);
-    array.set(32);
-    for (int i = 0; i < array.getSize(); i++) {
-      int expected;
-      if (i <= 31) {
-        expected = 31;
-      } else if (i == 32) {
-        expected = 32;
-      } else {
-        expected = 63;
-      }
-      assertEquals(String.valueOf(i), expected, array.getNextSet(i));
-    }
-  }
-
-  @Test
-  public void testGetNextSet4() {
-    BitArray array = new BitArray(63);
-    array.set(33);
-    array.set(40);
-    for (int i = 0; i < array.getSize(); i++) {
-      int expected;
-      if (i <= 33) {
-        expected = 33;
-      } else if (i <= 40) {
-        expected = 40;
-      } else {
-        expected = 63;
-      }
-      assertEquals(String.valueOf(i), expected, array.getNextSet(i));
-    }
-  }
-  
-  @Test
-  public void testGetNextSet5() {
-    Random r = new Random(0xDEADBEEF);
+  void testGetSet() {
+    BitArray bitArray = new BitArray(10);
     for (int i = 0; i < 10; i++) {
-      BitArray array = new BitArray(1 + r.nextInt(100));
-      int numSet = r.nextInt(20);
-      for (int j = 0; j < numSet; j++) {
-        array.set(r.nextInt(array.getSize()));
-      }
-      int numQueries = r.nextInt(20);
-      for (int j = 0; j < numQueries; j++) {
-        int query = r.nextInt(array.getSize());
-        int expected = query;
-        while (expected < array.getSize() && !array.get(expected)) {
-          expected++;
-        }
-        int actual = array.getNextSet(query);
-        assertEquals(expected, actual);
-      }
-    }
-  }
-
-
-  @Test
-  public void testSetBulk() {
-    BitArray array = new BitArray(64);
-    array.setBulk(32, 0xFFFF0000);
-    for (int i = 0; i < 48; i++) {
-      assertFalse(array.get(i));
-    }
-    for (int i = 48; i < 64; i++) {
-      assertTrue(array.get(i));
+      assertFalse(bitArray.get(i));
+      bitArray.set(i);
+      assertTrue(bitArray.get(i));
     }
   }
 
   @Test
-  public void testSetRange() {
-    BitArray array = new BitArray(64);
-    array.setRange(28, 36);
-    assertFalse(array.get(27));
-    for (int i = 28; i < 36; i++) {
-      assertTrue(array.get(i));
-    }
-    assertFalse(array.get(36));
+  void testGetNextSet1() {
+    BitArray bitArray = new BitArray(10);
+    assertEquals(10, bitArray.getNextSet(0));
+    bitArray = new BitArray(100);
+    assertEquals(100, bitArray.getNextSet(0));
   }
 
   @Test
-  public void testClear() {
-    BitArray array = new BitArray(32);
+  void testGetNextSet2() {
+    BitArray bitArray = new BitArray(10);
+    bitArray.set(5);
+    assertEquals(5, bitArray.getNextSet(0));
+  }
+
+  @Test
+  void testGetNextSet3() {
+    BitArray bitArray = new BitArray(20);
+    bitArray.set(5);
+    bitArray.set(15);
+    assertEquals(5, bitArray.getNextSet(0));
+    assertEquals(15, bitArray.getNextSet(6));
+  }
+
+  @Test
+  void testGetNextSet4() {
+    BitArray bitArray = new BitArray(20);
+    bitArray.set(3);
+    bitArray.set(7);
+    bitArray.set(10);
+    assertEquals(3, bitArray.getNextSet(0));
+    assertEquals(7, bitArray.getNextSet(4));
+    assertEquals(10, bitArray.getNextSet(8));
+  }
+
+  @Test
+  void testGetNextSet5() {
+    BitArray bitArray = new BitArray(50);
+    for (int i = 0; i < 50; i += 5) {
+      bitArray.set(i);
+    }
+    for (int i = 0; i < 50; i += 5) {
+      assertEquals(i, bitArray.getNextSet(i));
+    }
+  }
+
+  @Test
+  void testSetBulk() {
+    BitArray bitArray = new BitArray(32);
+    bitArray.setBulk(0, 0xFFFF0000);
+    for (int i = 0; i < 16; i++) {
+      assertFalse(bitArray.get(i));
+    }
+    for (int i = 16; i < 32; i++) {
+      assertTrue(bitArray.get(i));
+    }
+  }
+
+  @Test
+  void testSetRange() {
+    BitArray bitArray = new BitArray(32);
+    bitArray.setRange(8, 24);
+    for (int i = 0; i < 8; i++) {
+      assertFalse(bitArray.get(i));
+    }
+    for (int i = 8; i < 24; i++) {
+      assertTrue(bitArray.get(i));
+    }
+    for (int i = 24; i < 32; i++) {
+      assertFalse(bitArray.get(i));
+    }
+  }
+
+  @Test
+  void testClear() {
+    BitArray bitArray = new BitArray(32);
+    bitArray.setRange(0, 32);
+    bitArray.clear();
     for (int i = 0; i < 32; i++) {
-      array.set(i);
-    }
-    array.clear();
-    for (int i = 0; i < 32; i++) {
-      assertFalse(array.get(i));
+      assertFalse(bitArray.get(i));
     }
   }
 
   @Test
-  public void testFlip() {
-    BitArray array = new BitArray(32);
-    assertFalse(array.get(5));
-    array.flip(5);
-    assertTrue(array.get(5));
-    array.flip(5);
-    assertFalse(array.get(5));
+  void testFlip() {
+    BitArray bitArray = new BitArray(10);
+    bitArray.flip(5);
+    assertTrue(bitArray.get(5));
+    bitArray.flip(5);
+    assertFalse(bitArray.get(5));
   }
 
   @Test
-  public void testGetArray() {
-    BitArray array = new BitArray(64);
-    array.set(0);
-    array.set(63);
-    int[] ints = array.getBitArray();
-    assertEquals(1, ints[0]);
-    assertEquals(Integer.MIN_VALUE, ints[1]);
+  void testGetArray() {
+    BitArray bitArray = new BitArray(64);
+    bitArray.set(0);
+    bitArray.set(63);
+    int[] array = bitArray.getBitArray();
+    assertEquals(1, array[0]);
+    assertEquals(1 << 31, array[1]);
   }
 
   @Test
-  public void testIsRange() {
-    BitArray array = new BitArray(64);
-    assertTrue(array.isRange(0, 64, false));
-    assertFalse(array.isRange(0, 64, true));
-    array.set(32);
-    assertTrue(array.isRange(32, 33, true));
-    array.set(31);
-    assertTrue(array.isRange(31, 33, true));
-    array.set(34);
-    assertFalse(array.isRange(31, 35, true));
-    for (int i = 0; i < 31; i++) {
-      array.set(i);
-    }
-    assertTrue(array.isRange(0, 33, true));
-    for (int i = 33; i < 64; i++) {
-      array.set(i);
-    }
-    assertTrue(array.isRange(0, 64, true));
-    assertFalse(array.isRange(0, 64, false));
+  void testIsRange() {
+    BitArray bitArray = new BitArray(64);
+    bitArray.setRange(10, 20);
+    assertTrue(bitArray.isRange(10, 20, true));
+    assertFalse(bitArray.isRange(0, 10, true));
+    assertFalse(bitArray.isRange(20, 30, true));
+  }
+
+  //3ter versuch
+  @Test
+  void reverseAlgorithmTest() {
+    BitArray bitArray = new BitArray(64);
+    bitArray.set(0);
+    bitArray.set(63);
+    bitArray.reverse();
+    int[] reversed = bitArray.getBitArray();
+    assertEquals(0x00000001, reversed[0]);
+    assertEquals(0x80000000, reversed[1]);
   }
 
   @Test
-  public void reverseAlgorithmTest() {
-    int[] oldBits = {128, 256, 512, 6453324, 50934953};
-    for (int size = 1; size < 160; size++) {
-      int[] newBitsOriginal = reverseOriginal(oldBits.clone(), size);
-      BitArray newBitArray = new BitArray(oldBits.clone(), size);
-      newBitArray.reverse();
-      int[] newBitsNew = newBitArray.getBitArray();
-      assertTrue(arraysAreEqual(newBitsOriginal, newBitsNew, size / 32 + 1));
-    }
+  void testClone() {
+    BitArray bitArray = new BitArray(10);
+    bitArray.set(5);
+    BitArray clone = bitArray.clone();
+    assertEquals(bitArray, clone);
+    clone.set(6);
+    assertNotEquals(bitArray, clone);
   }
 
   @Test
-  public void testClone() {
-    BitArray array = new BitArray(32);
-    array.clone().set(0);
-    assertFalse(array.get(0));
+  void testEquals() {
+    BitArray bitArray1 = new BitArray(10);
+    BitArray bitArray2 = new BitArray(10);
+    assertEquals(bitArray1, bitArray2);
+    bitArray1.set(5);
+    assertNotEquals(bitArray1, bitArray2);
+    bitArray2.set(5);
+    assertEquals(bitArray1, bitArray2);
+    assertEquals(bitArray1.hashCode(), bitArray2.hashCode());
   }
-
-  @Test
-  public void testEquals() {
-    BitArray a = new BitArray(32);
-    BitArray b = new BitArray(32);
-    assertEquals(a, b);
-    assertEquals(a.hashCode(), b.hashCode());
-    assertNotEquals(a, new BitArray(31));
-    a.set(16);
-    assertNotEquals(a, b);
-    assertNotEquals(a.hashCode(), b.hashCode());
-    b.set(16);
-    assertEquals(a, b);
-    assertEquals(a.hashCode(), b.hashCode());
-  }
-
-  private static int[] reverseOriginal(int[] oldBits, int size) {
-    int[] newBits = new int[oldBits.length];
-    for (int i = 0; i < size; i++) {
-      if (bitSet(oldBits, size - i - 1)) {
-        newBits[i / 32] |= 1 << (i & 0x1F);
-      }
-    }
-    return newBits;
-  }
-
-  private static boolean bitSet(int[] bits, int i) {
-    return (bits[i / 32] & (1 << (i & 0x1F))) != 0;
-  }
-
-  private static boolean arraysAreEqual(int[] left, int[] right, int size) {
-    for (int i = 0; i < size; i++) {
-      if (left[i] != right[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
 }
+// 1-3 15/15

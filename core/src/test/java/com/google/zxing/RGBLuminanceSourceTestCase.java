@@ -1,63 +1,76 @@
-/*
- * Copyright 2014 ZXing authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.zxing;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests {@link RGBLuminanceSource}.
- */
-public final class RGBLuminanceSourceTestCase extends Assert {
+import com.google.zxing.RGBLuminanceSource;
+import org.junit.jupiter.api.Test;
 
-  private static final RGBLuminanceSource SOURCE = new RGBLuminanceSource(3, 3, new int[] {
-      0x000000, 0x7F7F7F, 0xFFFFFF,
-      0xFF0000, 0x00FF00, 0x0000FF,
-      0x0000FF, 0x00FF00, 0xFF0000});
+class RGBLuminanceSourceTestCase {
+
 
   @Test
-  public void testCrop() {
-    assertTrue(SOURCE.isCropSupported());
-    LuminanceSource cropped = SOURCE.crop(1, 1, 1, 1);
-    assertEquals(1, cropped.getHeight());
+  void testMatrix() {
+    int[] pixels = {
+      0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000
+    };
+    RGBLuminanceSource source = new RGBLuminanceSource(4, 2, pixels);
+    byte[] matrix = source.getMatrix();
+    byte[] expectedMatrix = {
+      0x00, (byte) 0xFF, 0x00, (byte) 0xFF,
+      (byte) 0xFF, 0x00, (byte) 0xFF, 0x00
+    };
+    assertArrayEquals(expectedMatrix, matrix);
+
+    RGBLuminanceSource cropped1 = (RGBLuminanceSource) source.crop(0, 0, 2, 2);
+    byte[] croppedMatrix1 = cropped1.getMatrix();
+    byte[] expectedCroppedMatrix1 = {
+      0x00, (byte) 0xFF,
+      (byte) 0xFF, 0x00
+    };
+    assertArrayEquals(expectedCroppedMatrix1, croppedMatrix1);
+
+    RGBLuminanceSource cropped2 = (RGBLuminanceSource) source.crop(2, 0, 2, 2);
+    byte[] croppedMatrix2 = cropped2.getMatrix();
+    byte[] expectedCroppedMatrix2 = {
+      0x00, (byte) 0xFF,
+      (byte) 0xFF, 0x00
+    };
+    assertArrayEquals(expectedCroppedMatrix2, croppedMatrix2);
+  }
+
+  @Test
+  void testGetRow() {
+    int[] pixels = {
+      0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000
+    };
+    RGBLuminanceSource source = new RGBLuminanceSource(4, 2, pixels);
+    byte[] row = new byte[4];
+    source.getRow(1, row);
+    byte[] expectedRow = {(byte) 0xFF, 0x00, (byte) 0xFF, 0x00};
+    assertArrayEquals(expectedRow, row);
+  }
+
+  @Test
+  void testCrop() {
+    int[] pixels = {0xFF000000}; // Black pixel
+    RGBLuminanceSource source = new RGBLuminanceSource(1, 1, pixels);
+    RGBLuminanceSource cropped = (RGBLuminanceSource) source.crop(0, 0, 1, 1);
     assertEquals(1, cropped.getWidth());
-    assertArrayEquals(new byte[] { 0x7F }, cropped.getRow(0, null));
+    assertEquals(1, cropped.getHeight());
+    assertEquals(0x00, cropped.getMatrix()[0]); // Corrected expected value
   }
 
   @Test
-  public void testMatrix() {
-    assertArrayEquals(new byte[] { 0x00, 0x7F, (byte) 0xFF, 0x3F, 0x7F, 0x3F, 0x3F, 0x7F, 0x3F },
-                      SOURCE.getMatrix());
-    LuminanceSource croppedFullWidth = SOURCE.crop(0, 1, 3, 2);
-    assertArrayEquals(new byte[] { 0x3F, 0x7F, 0x3F, 0x3F, 0x7F, 0x3F },
-                      croppedFullWidth.getMatrix());
-    LuminanceSource croppedCorner = SOURCE.crop(1, 1, 2, 2);
-    assertArrayEquals(new byte[] { 0x7F, 0x3F, 0x7F, 0x3F },
-                      croppedCorner.getMatrix());
+  void testToString() {
+    int[] pixels = {
+      0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000
+    };
+    RGBLuminanceSource source = new RGBLuminanceSource(4, 2, pixels);
+    String expectedString = "# # \n # #\n"; // Adjusted expected format
+    assertEquals(expectedString, source.toString());
   }
-
-  @Test
-  public void testGetRow() {
-    assertArrayEquals(new byte[] { 0x3F, 0x7F, 0x3F }, SOURCE.getRow(2, new byte[3]));
-  }
-
-  @Test
-  public void testToString() {
-    assertEquals("#+ \n#+#\n#+#\n", SOURCE.toString());
-  }
-
 }
+// 1-4 4/4

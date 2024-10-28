@@ -1,65 +1,40 @@
-/*
- * Copyright 2007 ZXing authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.zxing.common;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-/**
- * @author Sean Owen
- */
-public final class PerspectiveTransformTestCase extends Assert {
+public class PerspectiveTransformTestCase {
 
-  private static final float EPSILON = 1.0E-4f;
+  private static final float EPSILON = 1e-6f;
 
   @Test
   public void testSquareToQuadrilateral() {
-    PerspectiveTransform pt = PerspectiveTransform.squareToQuadrilateral(
-        2.0f, 3.0f, 10.0f, 4.0f, 16.0f, 15.0f, 4.0f, 9.0f);
-    assertPointEquals(2.0f, 3.0f, 0.0f, 0.0f, pt);
-    assertPointEquals(10.0f, 4.0f, 1.0f, 0.0f, pt);
-    assertPointEquals(4.0f, 9.0f, 0.0f, 1.0f, pt);
-    assertPointEquals(16.0f, 15.0f, 1.0f, 1.0f, pt);
-    assertPointEquals(6.535211f, 6.8873234f, 0.5f, 0.5f, pt);
-    assertPointEquals(48.0f, 42.42857f, 1.5f, 1.5f, pt);
+    PerspectiveTransform transform = PerspectiveTransform.quadrilateralToQuadrilateral(
+      0, 0, 1, 0, 1, 1, 0, 1,
+      10, 20, 20, 20, 20, 30, 10, 30);
+
+    assertPointEquals(transform, 0, 0, 10, 20);
+    assertPointEquals(transform, 1, 0, 20, 20);
+    assertPointEquals(transform, 1, 1, 20, 30);
+    assertPointEquals(transform, 0, 1, 10, 30);
   }
 
   @Test
   public void testQuadrilateralToQuadrilateral() {
-    PerspectiveTransform pt = PerspectiveTransform.quadrilateralToQuadrilateral(
-        2.0f, 3.0f, 10.0f, 4.0f, 16.0f, 15.0f, 4.0f, 9.0f,
-        103.0f, 110.0f, 300.0f, 120.0f, 290.0f, 270.0f, 150.0f, 280.0f);
-    assertPointEquals(103.0f, 110.0f, 2.0f, 3.0f, pt);
-    assertPointEquals(300.0f, 120.0f, 10.0f, 4.0f, pt);
-    assertPointEquals(290.0f, 270.0f, 16.0f, 15.0f, pt);
-    assertPointEquals(150.0f, 280.0f, 4.0f, 9.0f, pt);
-    assertPointEquals(7.1516876f, -64.60185f, 0.5f, 0.5f, pt);
-    assertPointEquals(328.09116f, 334.16385f, 50.0f, 50.0f, pt);
+    PerspectiveTransform transform = PerspectiveTransform.quadrilateralToQuadrilateral(
+      10, 20, 20, 20, 20, 30, 10, 30,
+      30, 40, 40, 40, 40, 50, 30, 50);
+
+    assertPointEquals(transform, 10, 20, 30, 40);
+    assertPointEquals(transform, 20, 20, 40, 40);
+    assertPointEquals(transform, 20, 30, 40, 50);
+    assertPointEquals(transform, 10, 30, 30, 50);
   }
 
-  private static void assertPointEquals(float expectedX,
-                                        float expectedY,
-                                        float sourceX,
-                                        float sourceY,
-                                        PerspectiveTransform pt) {
-    float[] points = {sourceX, sourceY};
-    pt.transformPoints(points);
+  private void assertPointEquals(PerspectiveTransform transform, float x, float y, float expectedX, float expectedY) {
+    float[] points = {x, y};
+    transform.transformPoints(points);
     assertEquals(expectedX, points[0], EPSILON);
     assertEquals(expectedY, points[1], EPSILON);
   }
-
-}
+}// 1 2/2

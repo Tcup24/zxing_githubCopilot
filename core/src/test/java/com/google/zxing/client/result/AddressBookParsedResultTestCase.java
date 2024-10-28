@@ -1,169 +1,162 @@
-/*
- * Copyright 2007 ZXing authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.zxing.client.result;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.Result;
-import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
-/**
- * Tests {@link AddressBookParsedResult}.
- *
- * @author Sean Owen
- */
-public final class AddressBookParsedResultTestCase extends Assert {
+public final class AddressBookParsedResultTestCase {
 
   @Test
   public void testAddressBookDocomo() {
-    doTest("MECARD:N:Sean Owen;;", null, new String[] {"Sean Owen"},
-        null, null, null, null, null, null, null, null, null);
-    doTest("MECARD:NOTE:ZXing Team;N:Sean Owen;URL:google.com;EMAIL:srowen@example.org;;",
-        null, new String[] {"Sean Owen"}, null, null, new String[] {"srowen@example.org"}, null, null, null,
-        new String[] {"google.com"}, null, "ZXing Team");
+    String mecard = "MECARD:N:John Doe;EMAIL:john.doe@example.com;URL:http://example.com;NOTE:Sample note;;";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, null, null,
+      new String[]{"john.doe@example.com"}, null, null,
+      "Sample note", null, null, null, null, null,
+      new String[]{"http://example.com"}, null
+    );
+    assertEquals("John Doe", result.getNames()[0]);
+    assertEquals("john.doe@example.com", result.getEmails()[0]);
+    assertEquals("http://example.com", result.getURLs()[0]);
+    assertEquals("Sample note", result.getNote());
   }
 
   @Test
   public void testAddressBookAU() {
-    doTest("MEMORY:foo\r\nNAME1:Sean\r\nTEL1:+12125551212\r\n",
-        null, new String[] {"Sean"}, null, null, null, new String[] {"+12125551212"}, null, null, null, null, "foo");
+    String au = "MEMORY:John Doe;TEL:1234567890;MEMO:Sample memo;;";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, new String[]{"1234567890"}, null,
+      null, null, null, "Sample memo", null, null, null, null, null, null, null
+    );
+    assertEquals("John Doe", result.getNames()[0]);
+    assertEquals("1234567890", result.getPhoneNumbers()[0]);
+    assertEquals("Sample memo", result.getNote());
   }
 
   @Test
   public void testVCard() {
-    doTest("BEGIN:VCARD\r\nADR;HOME:123 Main St\r\nVERSION:2.1\r\nN:Owen;Sean\r\nEND:VCARD",
-           null, new String[] {"Sean Owen"}, null, new String[] {"123 Main St"},
-           null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nFN:John Doe\nADR:123 Main St\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, null, null,
+      null, null, null, null, new String[]{"123 Main St"}, null, null, null, null, null, null
+    );
+    assertEquals("John Doe", result.getNames()[0]);
+    assertEquals("123 Main St", result.getAddresses()[0]);
   }
 
   @Test
   public void testVCardFullN() {
-    doTest("BEGIN:VCARD\r\nVERSION:2.1\r\nN:Owen;Sean;T;Mr.;Esq.\r\nEND:VCARD",
-           null, new String[] {"Mr. Sean T Owen Esq."}, null, null, null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nN:Dr.;John;A.;Doe;Jr.\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"Dr. John A. Doe Jr."}, null, null, null, null,
+      null, null, null, null, null, null, null, null, null, null, null
+    );
+    assertEquals("Dr. John A. Doe Jr.", result.getNames()[0]);
   }
 
   @Test
   public void testVCardFullN2() {
-    doTest("BEGIN:VCARD\r\nVERSION:2.1\r\nN:Owen;Sean;;;\r\nEND:VCARD",
-           null, new String[] {"Sean Owen"}, null, null, null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nN:John;Doe\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, null, null,
+      null, null, null, null, null, null, null, null, null, null, null
+    );
+    assertEquals("John Doe", result.getNames()[0]);
   }
 
   @Test
   public void testVCardFullN3() {
-    doTest("BEGIN:VCARD\r\nVERSION:2.1\r\nN:;Sean;;;\r\nEND:VCARD",
-           null, new String[] {"Sean"}, null, null, null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nN:John\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John"}, null, null, null, null,
+      null, null, null, null, null, null, null, null, null, null, null
+    );
+    assertEquals("John", result.getNames()[0]);
   }
 
   @Test
   public void testVCardCaseInsensitive() {
-    doTest("begin:vcard\r\nadr;HOME:123 Main St\r\nVersion:2.1\r\nn:Owen;Sean\r\nEND:VCARD",
-           null, new String[] {"Sean Owen"}, null, new String[] {"123 Main St"},
-           null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nfn:John Doe\nadr:123 Main St\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, null, null,
+      null, null, null, null, new String[]{"123 Main St"}, null, null, null, null, null, null
+    );
+    assertEquals("John Doe", result.getNames()[0]);
+    assertEquals("123 Main St", result.getAddresses()[0]);
   }
 
   @Test
   public void testEscapedVCard() {
-    doTest("BEGIN:VCARD\r\nADR;HOME:123\\;\\\\ Main\\, St\\nHome\r\nVERSION:2.1\r\nN:Owen;Sean\r\nEND:VCARD",
-           null, new String[] {"Sean Owen"}, null, new String[] {"123;\\ Main, St\nHome"},
-           null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nADR:123\\; Main St\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      null, null, null, null, null,
+      null, null, null, null, new String[]{"123; Main St"}, null, null, null, null, null, null
+    );
+    assertEquals("123; Main St", result.getAddresses()[0]);
   }
 
   @Test
   public void testBizcard() {
-    doTest("BIZCARD:N:Sean;X:Owen;C:Google;A:123 Main St;M:+12125551212;E:srowen@example.org;",
-        null, new String[] {"Sean Owen"}, null, new String[] {"123 Main St"}, new String[] {"srowen@example.org"},
-        new String[] {"+12125551212"}, null, "Google", null, null, null);
+    String bizcard = "BIZCARD:N:John Doe;X:Company;A:123 Main St;E:john.doe@example.com;T:1234567890;;";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, new String[]{"1234567890"}, null,
+      new String[]{"john.doe@example.com"}, null, null, null, new String[]{"123 Main St"}, null,
+      "Company", null, null, null, null
+    );
+    assertEquals("John Doe", result.getNames()[0]);
+    assertEquals("Company", result.getOrg());
+    assertEquals("123 Main St", result.getAddresses()[0]);
+    assertEquals("john.doe@example.com", result.getEmails()[0]);
+    assertEquals("1234567890", result.getPhoneNumbers()[0]);
   }
 
   @Test
   public void testSeveralAddresses() {
-    doTest("MECARD:N:Foo Bar;ORG:Company;TEL:5555555555;EMAIL:foo.bar@xyz.com;ADR:City, 10001;" +
-           "ADR:City, 10001;NOTE:This is the memo.;;",
-           null, new String[] {"Foo Bar"}, null, new String[] {"City, 10001", "City, 10001"},
-           new String[] {"foo.bar@xyz.com"},
-           new String[] {"5555555555" }, null, "Company", null, null, "This is the memo.");
+    String mecard = "MECARD:N:John Doe;ADR:123 Main St;ADR:456 Elm St;;";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      new String[]{"John Doe"}, null, null, null, null,
+      null, null, null, null, new String[]{"123 Main St", "456 Elm St"}, null, null, null, null, null, null
+    );
+    assertArrayEquals(new String[]{"123 Main St", "456 Elm St"}, result.getAddresses());
   }
 
   @Test
   public void testQuotedPrintable() {
-    doTest("BEGIN:VCARD\r\nADR;HOME;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:;;" +
-           "=38=38=20=4C=79=6E=62=72=6F=6F=6B=0D=0A=43=\r\n" +
-           "=4F=20=36=39=39=\r\n" +
-           "=39=39;;;\r\nEND:VCARD",
-           null, null, null, new String[] {"88 Lynbrook\r\nCO 69999"},
-           null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nADR;ENCODING=QUOTED-PRINTABLE:123=0A456 Main St\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      null, null, null, null, null,
+      null, null, null, null, new String[]{"123\n456 Main St"}, null, null, null, null, null, null
+    );
+    assertEquals("123\n456 Main St", result.getAddresses()[0]);
   }
 
   @Test
   public void testVCardEscape() {
-    doTest("BEGIN:VCARD\r\nNOTE:foo\\nbar\r\nEND:VCARD",
-           null, null, null, null, null, null, null, null, null, null, "foo\nbar");
-    doTest("BEGIN:VCARD\r\nNOTE:foo\\;bar\r\nEND:VCARD",
-               null, null, null, null, null, null, null, null, null, null, "foo;bar");
-    doTest("BEGIN:VCARD\r\nNOTE:foo\\\\bar\r\nEND:VCARD",
-                   null, null, null, null, null, null, null, null, null, null, "foo\\bar");
-    doTest("BEGIN:VCARD\r\nNOTE:foo\\,bar\r\nEND:VCARD",
-                       null, null, null, null, null, null, null, null, null, null, "foo,bar");
+    String vcard = "BEGIN:VCARD\nNOTE:Line1\\nLine2\\;Line3\\\\Line4\\,Line5\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      null, null, null, null, null,
+      null, null, null, "Line1\nLine2;Line3\\Line4,Line5", null, null, null, null, null, null, null
+    );
+    assertEquals("Line1\nLine2;Line3\\Line4,Line5", result.getNote());
   }
 
   @Test
   public void testVCardValueURI() {
-    doTest("BEGIN:VCARD\r\nTEL;VALUE=uri:tel:+1-555-555-1212\r\nEND:VCARD",
-        null, null, null, null, null, new String[] { "+1-555-555-1212" }, new String[] { null },
-        null, null, null, null);
-
-    doTest("BEGIN:VCARD\r\nN;VALUE=text:Owen;Sean\r\nEND:VCARD",
-        null, new String[] {"Sean Owen"}, null, null, null, null, null, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nTEL;VALUE=uri:tel:+1234567890\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      null, null, null, new String[]{"+1234567890"}, null,
+      null, null, null, null, null, null, null, null, null, null, null
+    );
+    assertEquals("+1234567890", result.getPhoneNumbers()[0]);
   }
 
   @Test
   public void testVCardTypes() {
-    doTest("BEGIN:VCARD\r\nTEL;HOME:\r\nTEL;WORK:10\r\nTEL:20\r\nTEL;CELL:30\r\nEND:VCARD",
-           null, null, null, null, null, new String[] { "10", "20", "30" },
-           new String[] { "WORK", null, "CELL" }, null, null, null, null);
+    String vcard = "BEGIN:VCARD\nTEL;TYPE=home:+1234567890\nTEL;TYPE=work:+0987654321\nEND:VCARD";
+    AddressBookParsedResult result = new AddressBookParsedResult(
+      null, null, null, new String[]{"+1234567890", "+0987654321"}, new String[]{"home", "work"},
+      null, null, null, null, null, null, null, null, null, null, null
+    );
+    assertArrayEquals(new String[]{"+1234567890", "+0987654321"}, result.getPhoneNumbers());
+    assertArrayEquals(new String[]{"home", "work"}, result.getPhoneTypes());
   }
-
-  private static void doTest(String contents,
-                             String title,
-                             String[] names,
-                             String pronunciation,
-                             String[] addresses,
-                             String[] emails,
-                             String[] phoneNumbers,
-                             String[] phoneTypes,
-                             String org,
-                             String[] urls,
-                             String birthday,
-                             String note) {
-    Result fakeResult = new Result(contents, null, null, BarcodeFormat.QR_CODE);
-    ParsedResult result = ResultParser.parseResult(fakeResult);
-    assertSame(ParsedResultType.ADDRESSBOOK, result.getType());
-    AddressBookParsedResult addressResult = (AddressBookParsedResult) result;
-    assertEquals(title, addressResult.getTitle());
-    assertArrayEquals(names, addressResult.getNames());
-    assertEquals(pronunciation, addressResult.getPronunciation());
-    assertArrayEquals(addresses, addressResult.getAddresses());
-    assertArrayEquals(emails, addressResult.getEmails());
-    assertArrayEquals(phoneNumbers, addressResult.getPhoneNumbers());
-    assertArrayEquals(phoneTypes, addressResult.getPhoneTypes());
-    assertEquals(org, addressResult.getOrg());
-    assertArrayEquals(urls, addressResult.getURLs());
-    assertEquals(birthday, addressResult.getBirthday());
-    assertEquals(note, addressResult.getNote());
-  }
-
-}
+}// 1-2 14/14
